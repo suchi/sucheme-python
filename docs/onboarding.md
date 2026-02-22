@@ -47,7 +47,7 @@ git clone https://github.com/suchi/sucheme-python.git
 cd sucheme-python
 
 # 2. 開発用依存関係を含む仮想環境を構築
-uv sync --dev
+uv sync --extra dev
 
 # 3. テストの実行
 uv run pytest
