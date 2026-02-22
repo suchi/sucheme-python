@@ -47,7 +47,7 @@ git clone https://github.com/suchi/sucheme-python.git
 cd sucheme-python
 
 # 2. 開発用依存関係を含む仮想環境を構築
-uv sync --extra dev
+uv sync --dev
 
 # 3. テストの実行
 uv run pytest
@@ -69,7 +69,8 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # 3. 開発用インストール
-pip install -e ".[dev]"
+pip install -e .
+pip install pytest pytest-cov ruff
 
 # 4. テストの実行
 pytest

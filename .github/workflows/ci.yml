@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --dev
 
       - name: Lint with ruff
         run: uv run ruff check sucheme/
@@ -41,7 +41,9 @@ jobs:
         if: matrix.python-version == '3.12'
         with:
           name: coverage-report
-          path: htmlcov/
+          path: |
+            htmlcov/
+            coverage.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -49,6 +51,19 @@ jobs:
         with:
           file: coverage.xml
           fail_ci_if_error: false
+
+      - name: Coverage summary
+        if: matrix.python-version == '3.12'
+        run: |
+          uv run python -m coverage report --format=total > /tmp/total.txt
+          TOTAL=$(cat /tmp/total.txt)
+          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Total coverage: ${TOTAL}%**" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          uv run python -m coverage report >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
 
   smoke-test:
     runs-on: ubuntu-latest
