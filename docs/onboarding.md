@@ -29,9 +29,35 @@ graph TB
 ## 前提条件
 
 - Python 3.10 以上
-- pip
+- [uv](https://docs.astral.sh/uv/) (推奨) または pip
 
-## セットアップ
+## セットアップ（uv を使用 — 推奨）
+
+`uv` はグローバルの Python 環境を汚染せず、プロジェクトごとに独立した仮想環境を自動管理します。
+
+```bash
+# 0. uv のインストール（未インストールの場合）
+pip install uv
+# または公式スクリプトでのインストール:
+# curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux/macOS
+# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
+
+# 1. リポジトリのクローン
+git clone https://github.com/suchi/sucheme-python.git
+cd sucheme-python
+
+# 2. 開発用依存関係を含む仮想環境を構築
+uv sync --dev
+
+# 3. テストの実行
+uv run pytest
+
+# 4. カバレッジ付きテスト
+uv run pytest --cov=sucheme --cov-report=html
+open htmlcov/index.html  # カバレッジレポートを表示
+```
+
+## セットアップ（pip を使用）
 
 ```bash
 # 1. リポジトリのクローン

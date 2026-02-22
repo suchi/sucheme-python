@@ -21,23 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+        run: uv sync --dev
 
       - name: Lint with ruff
-        run: |
-          ruff check sucheme/
+        run: uv run ruff check sucheme/
 
       - name: Run tests with coverage
         run: |
-          pytest --cov=sucheme --cov-report=xml --cov-report=html --cov-report=term-missing -v
+          uv run pytest --cov=sucheme --cov-report=xml --cov-report=html --cov-report=term-missing -v
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -61,29 +58,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
 
       - name: Install
-        run: pip install -e .
+        run: uv sync
 
       - name: CLI smoke test
         run: |
-          sucheme -e "(display (+ 1 2 3))" | grep -q "^6$"
-          sucheme -e "(display (factorial 10))" | grep -q "3628800"
-          sucheme --version
+          uv run sucheme -e "(display (+ 1 2 3))" | grep -q "^6$"
+          uv run sucheme -e "(display (factorial 10))" | grep -q "3628800"
+          uv run sucheme --version
 
       - name: Run basic samples
         run: |
-          sucheme samples/basic/01-hello-world.scm
-          sucheme samples/basic/02-arithmetic.scm
-          sucheme samples/basic/07-recursion.scm
+          uv run sucheme samples/basic/01-hello-world.scm
+          uv run sucheme samples/basic/02-arithmetic.scm
+          uv run sucheme samples/basic/07-recursion.scm
 
       - name: Web UI health check
         run: |
-          pip install flask
-          timeout 5 sucheme-web &
+          timeout 5 uv run sucheme-web &
           sleep 2
           curl -f http://127.0.0.1:5000/health || true
