@@ -368,6 +368,6 @@ samples/
 
 ```bash
 # サンプルを実行する
-sucheme samples/basic/01-hello-world.scm
-sucheme samples/intermediate/11-tail-recursion.scm
+uv run sucheme samples/basic/01-hello-world.scm
+uv run sucheme samples/intermediate/11-tail-recursion.scm
 ```

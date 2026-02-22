@@ -29,9 +29,35 @@ graph TB
 ## 前提条件
 
 - Python 3.10 以上
-- pip
+- [uv](https://docs.astral.sh/uv/) (推奨) または pip
 
-## セットアップ
+## セットアップ（uv を使用 — 推奨）
+
+`uv` はグローバルの Python 環境を汚染せず、プロジェクトごとに独立した仮想環境を自動管理します。
+
+```bash
+# 0. uv のインストール（未インストールの場合）
+pip install uv
+# または公式スクリプトでのインストール:
+# curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux/macOS
+# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
+
+# 1. リポジトリのクローン
+git clone https://github.com/suchi/sucheme-python.git
+cd sucheme-python
+
+# 2. 開発用依存関係を含む仮想環境を構築
+uv sync --extra dev
+
+# 3. テストの実行
+uv run pytest
+
+# 4. カバレッジ付きテスト
+uv run pytest --cov=sucheme --cov-report=html
+open htmlcov/index.html  # カバレッジレポートを表示
+```
+
+## セットアップ（pip を使用）
 
 ```bash
 # 1. リポジトリのクローン
@@ -170,24 +196,24 @@ sequenceDiagram
 
 ```bash
 # 全テスト実行
-pytest
+uv run pytest
 
 # 特定のテストファイル
-pytest tests/test_lexer.py -v
+uv run pytest tests/test_lexer.py -v
 
 # カバレッジ付き
-pytest --cov=sucheme --cov-report=html
+uv run pytest --cov=sucheme --cov-report=html
 
 # 特定のテスト
-pytest tests/test_evaluator.py::TestArithmetic -v
+uv run pytest tests/test_evaluator.py::TestArithmetic -v
 ```
 
 ## REPL の使い方
 
 ```bash
-sucheme          # REPL起動
-sucheme script.scm  # ファイル実行
-sucheme -e "(+ 1 2)"  # 式評価
+uv run sucheme          # REPL起動
+uv run sucheme script.scm  # ファイル実行
+uv run sucheme -e "(+ 1 2)"  # 式評価
 ```
 
 REPL内コマンド：
@@ -202,9 +228,9 @@ REPL内コマンド：
 ## Web UIの使い方
 
 ```bash
-sucheme-web              # デフォルト（127.0.0.1:5000）
-sucheme-web --port 8080  # ポート指定
-sucheme-web --host 0.0.0.0  # 外部公開
+uv run sucheme-web              # デフォルト（127.0.0.1:5000）
+uv run sucheme-web --port 8080  # ポート指定
+uv run sucheme-web --host 0.0.0.0  # 外部公開
 ```
 
 ブラウザで `http://localhost:5000` を開きます。

@@ -69,13 +69,13 @@ sucheme/
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # With coverage
-pytest --cov=sucheme --cov-report=html
+uv run pytest --cov=sucheme --cov-report=html
 
 # Specific module
-pytest tests/test_evaluator.py -v
+uv run pytest tests/test_evaluator.py -v
 ```
 
 ## R5RS Compliance
@@ -92,7 +92,7 @@ See `docs/r5rs-compliance.md` for current status.
 
 - 100+ sample programs in `samples/` directory
 - Organized by difficulty: `basic/`, `intermediate/`, `advanced/`
-- Each sample should be runnable: `sucheme samples/basic/01-hello-world.scm`
+- Each sample should be runnable: `uv run sucheme samples/basic/01-hello-world.scm`
 
 ## Release Process
 

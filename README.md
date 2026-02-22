@@ -26,20 +26,28 @@ graph LR
 ## クイックスタート
 
 ```bash
-# インストール
-pip install sucheme
+# リポジトリのクローン
+git clone https://github.com/suchi/sucheme-python.git
+cd sucheme-python
+
+# uv がない場合はインストール（グローバルPython環境に影響しません）
+pip install uv
+# または: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 依存関係を解決して仮想環境をセットアップ
+uv sync
 
 # REPLを起動
-sucheme
+uv run sucheme
 
 # ファイルを実行
-sucheme myprogram.scm
+uv run sucheme myprogram.scm
 
 # 式を評価
-sucheme -e "(display (+ 1 2 3))"
+uv run sucheme -e "(display (+ 1 2 3))"
 
 # Web UIを起動
-sucheme-web
+uv run sucheme-web
 ```
 
 ## ドキュメント
