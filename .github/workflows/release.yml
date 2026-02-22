@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -v
+
+      - name: Build package
+        run: python -m build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          body: |
+            ## sucheme ${{ github.ref_name }}
+
+            R5RS準拠Schemeインタプリタ sucheme のリリースです。
+
+            ### インストール
+
+            ```bash
+            pip install sucheme==${{ github.ref_name }}
+            ```
+
+            ### 使い方
+
+            ```bash
+            sucheme                    # REPL起動
+            sucheme script.scm         # ファイル実行
+            sucheme -e "(+ 1 2 3)"     # 式評価
+            sucheme-web                # Web UI起動
+            ```
+
+            詳細は [README](README.md) を参照してください。
