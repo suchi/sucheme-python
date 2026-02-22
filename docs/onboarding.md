@@ -54,7 +54,11 @@ uv run pytest
 
 # 4. カバレッジ付きテスト
 uv run pytest --cov=sucheme --cov-report=html
-open htmlcov/index.html  # カバレッジレポートを表示
+# カバレッジレポートを表示（OSに応じて使い分け）
+# macOS:                open htmlcov/index.html
+# Linux:                xdg-open htmlcov/index.html
+# Windows (PowerShell): Invoke-Item .\htmlcov\index.html
+# 全OS共通:             python -m webbrowser htmlcov/index.html
 ```
 
 ## セットアップ（pip を使用）
@@ -66,7 +70,9 @@ cd sucheme-python
 
 # 2. 仮想環境の作成（推奨）
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate       # Linux/macOS
+# .venv\Scripts\Activate.ps1    # Windows (PowerShell)
+# .venv\Scripts\activate.bat    # Windows (コマンドプロンプト)
 
 # 3. 開発用インストール
 pip install -e .
@@ -77,7 +83,11 @@ pytest
 
 # 5. カバレッジ付きテスト
 pytest --cov=sucheme --cov-report=html
-open htmlcov/index.html  # カバレッジレポートを表示
+# カバレッジレポートを表示（OSに応じて使い分け）
+# macOS:                open htmlcov/index.html
+# Linux:                xdg-open htmlcov/index.html
+# Windows (PowerShell): Invoke-Item .\htmlcov\index.html
+# 全OS共通:             python -m webbrowser htmlcov/index.html
 ```
 
 ## プロジェクト構造

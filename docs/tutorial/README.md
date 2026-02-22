@@ -321,14 +321,14 @@ x               ; => 100
 ### 14. ファイル処理
 
 ```scheme
-; ファイルへの書き込み
-(call-with-output-file "/tmp/test.txt"
+; ファイルへの書き込み（相対パスはどのOSでも動作します）
+(call-with-output-file "test-output.txt"
   (lambda (port)
     (display "Hello, File!" port)
     (newline port)))
 
 ; ファイルの読み込み
-(call-with-input-file "/tmp/test.txt"
+(call-with-input-file "test-output.txt"
   (lambda (port)
     (display (read-line port))
     (newline)))
