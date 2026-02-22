@@ -196,24 +196,24 @@ sequenceDiagram
 
 ```bash
 # 全テスト実行
-pytest
+uv run pytest
 
 # 特定のテストファイル
-pytest tests/test_lexer.py -v
+uv run pytest tests/test_lexer.py -v
 
 # カバレッジ付き
-pytest --cov=sucheme --cov-report=html
+uv run pytest --cov=sucheme --cov-report=html
 
 # 特定のテスト
-pytest tests/test_evaluator.py::TestArithmetic -v
+uv run pytest tests/test_evaluator.py::TestArithmetic -v
 ```
 
 ## REPL の使い方
 
 ```bash
-sucheme          # REPL起動
-sucheme script.scm  # ファイル実行
-sucheme -e "(+ 1 2)"  # 式評価
+uv run sucheme          # REPL起動
+uv run sucheme script.scm  # ファイル実行
+uv run sucheme -e "(+ 1 2)"  # 式評価
 ```
 
 REPL内コマンド：
@@ -228,9 +228,9 @@ REPL内コマンド：
 ## Web UIの使い方
 
 ```bash
-sucheme-web              # デフォルト（127.0.0.1:5000）
-sucheme-web --port 8080  # ポート指定
-sucheme-web --host 0.0.0.0  # 外部公開
+uv run sucheme-web              # デフォルト（127.0.0.1:5000）
+uv run sucheme-web --port 8080  # ポート指定
+uv run sucheme-web --host 0.0.0.0  # 外部公開
 ```
 
 ブラウザで `http://localhost:5000` を開きます。
