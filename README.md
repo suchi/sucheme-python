@@ -32,7 +32,10 @@ cd sucheme-python
 
 # uv がない場合はインストール（グローバルPython環境に影響しません）
 pip install uv
-# または: curl -LsSf https://astral.sh/uv/install.sh | sh
+# または公式スクリプト（Linux/macOS）:
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# または公式スクリプト（Windows PowerShell）:
+# powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # 依存関係を解決して仮想環境をセットアップ
 uv sync
