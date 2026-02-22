@@ -2,15 +2,17 @@
 Web UI for sucheme.
 
 Provides a simple Flask web application with a Scheme REPL interface.
+
+Note: The interpreter instance is shared across requests (single-user local use).
+Output capture uses contextvars for thread safety in threaded deployments.
+For multi-user deployments, use per-session interpreters keyed by session cookie.
 """
 
 from __future__ import annotations
 
-import os
-import sys
-from typing import Any
+import contextvars
 
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, request
 
 app = Flask(__name__)
 
@@ -146,7 +148,7 @@ _HTML = """<!DOCTYPE html>
     </div>
     <div class="input-row">
       <span id="prompt-label">λ></span>
-      <textarea id="input" rows="2" placeholder="Enter Scheme expression..." 
+      <textarea id="input" rows="2" placeholder="Enter Scheme expression..."
         onkeydown="handleKey(event)"></textarea>
       <button onclick="runCode()">Run</button>
     </div>
@@ -228,10 +230,13 @@ _HTML = """<!DOCTYPE html>
 </html>
 """
 
+# Per-request output buffer using contextvars for thread safety
+_request_output: contextvars.ContextVar[list[str] | None] = contextvars.ContextVar(
+    "request_output", default=None
+)
 
-# Session-based interpreter (one per process)
+# Shared interpreter (single-user local use only)
 _interp = None
-_captured_output: list[str] = []
 
 
 def _get_interpreter():
@@ -239,45 +244,69 @@ def _get_interpreter():
     if _interp is None:
         from sucheme.interpreter import Interpreter
         _interp = Interpreter()
-        # Patch print to capture output
+        # Patch print to capture output per-request
         _install_output_capture(_interp)
     return _interp
 
 
 def _install_output_capture(interp) -> None:
-    """Redirect display/write/newline to capture output."""
+    """Redirect display/write/newline to capture output per-request via contextvars.
+
+    When a Port argument is provided, delegates to the original port I/O
+    instead of capturing, preserving correct R5RS port semantics.
+    """
     from sucheme.types import (
-        PrimitiveProcedure, VOID, SchemeString, Char, SchemeTypeError,
-        scheme_display, scheme_repr, Port
+        VOID,
+        Char,
+        Port,
+        PrimitiveProcedure,
+        SchemeArityError,
+        scheme_display,
+        scheme_repr,
     )
 
+    def _buf_append(s: str) -> None:
+        buf = _request_output.get()
+        if buf is not None:
+            buf.append(s)
+
     def capture_display(*args):
-        _check_args(args, "display")
-        s = scheme_display(args[0])
-        _captured_output.append(s)
+        if not args:
+            raise SchemeArityError("display: requires at least 1 argument")
+        if len(args) >= 2 and isinstance(args[1], Port):
+            # Port provided: write to port directly
+            args[1].file.write(scheme_display(args[0]))
+            return VOID
+        _buf_append(scheme_display(args[0]))
         return VOID
 
     def capture_write(*args):
-        _check_args(args, "write")
-        s = scheme_repr(args[0])
-        _captured_output.append(s)
+        if not args:
+            raise SchemeArityError("write: requires at least 1 argument")
+        if len(args) >= 2 and isinstance(args[1], Port):
+            args[1].file.write(scheme_repr(args[0]))
+            return VOID
+        _buf_append(scheme_repr(args[0]))
         return VOID
 
     def capture_newline(*args):
-        _captured_output.append("\n")
+        if args and isinstance(args[0], Port):
+            args[0].file.write("\n")
+            return VOID
+        _buf_append("\n")
         return VOID
 
     def capture_write_char(*args):
         if not args:
-            return VOID
+            raise SchemeArityError("write-char: requires at least 1 argument")
         ch = args[0]
+        if len(args) >= 2 and isinstance(args[1], Port):
+            if isinstance(ch, Char):
+                args[1].file.write(ch.char)
+            return VOID
         if isinstance(ch, Char):
-            _captured_output.append(ch.char)
+            _buf_append(ch.char)
         return VOID
-
-    def _check_args(args, name):
-        if not args:
-            raise SchemeTypeError(f"{name}: no arguments")
 
     interp.env.define("display", PrimitiveProcedure(capture_display, "display"))
     interp.env.define("write", PrimitiveProcedure(capture_write, "write"))
@@ -292,7 +321,7 @@ def index():
 
 @app.route("/eval", methods=["POST"])
 def eval_endpoint():
-    from sucheme.types import VOID, SchemeError, scheme_repr, Values
+    from sucheme.types import VOID, SchemeError, Values, scheme_repr
 
     data = request.get_json(force=True, silent=True) or {}
     expr = data.get("expr", "")
@@ -301,11 +330,13 @@ def eval_endpoint():
         return jsonify({"result": "", "output": "", "error": ""})
 
     interp = _get_interpreter()
-    _captured_output.clear()
 
+    # Set up per-request output buffer via contextvars (thread-safe)
+    output_buf: list[str] = []
+    token = _request_output.set(output_buf)
     try:
         results = interp.eval_string(expr)
-        output_str = "".join(_captured_output)
+        output_str = "".join(output_buf)
         result_parts = []
         for r in results:
             if r is not VOID:
@@ -319,12 +350,13 @@ def eval_endpoint():
             "error": "",
         })
     except SystemExit:
-        return jsonify({"result": "", "output": "", "error": "exit called"})
+        return jsonify({"result": "", "output": "".join(output_buf), "error": "exit called"})
     except SchemeError as e:
-        return jsonify({"result": "", "output": "".join(_captured_output), "error": str(e)})
+        return jsonify({"result": "", "output": "".join(output_buf), "error": str(e)})
     except Exception as e:
-        return jsonify({"result": "", "output": "".join(_captured_output), "error": f"Internal error: {e}"})
-
+        return jsonify({"result": "", "output": "".join(output_buf), "error": f"Internal error: {e}"})
+    finally:
+        _request_output.reset(token)
 
 @app.route("/health")
 def health():

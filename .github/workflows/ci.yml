@@ -33,7 +33,7 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          ruff check sucheme/ || true
+          ruff check sucheme/
 
       - name: Run tests with coverage
         run: |

@@ -13,12 +13,13 @@ from __future__ import annotations
 import os
 import sys
 import traceback
-from typing import Any
 
-from sucheme.types import (
-    VOID, SchemeError, scheme_repr, scheme_display,
-)
 from sucheme.interpreter import Interpreter
+from sucheme.types import (
+    VOID,
+    SchemeError,
+    scheme_repr,
+)
 
 HISTORY_FILE = os.path.expanduser("~/.sucheme_history")
 
@@ -53,10 +54,8 @@ Keyboard shortcuts (Emacs-style):
 def _get_prompt_toolkit():
     try:
         from prompt_toolkit import PromptSession
-        from prompt_toolkit.history import FileHistory
         from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-        from prompt_toolkit.lexers import PygmentsLexer
-        from prompt_toolkit.key_binding import KeyBindings
+        from prompt_toolkit.history import FileHistory
         return PromptSession, FileHistory, AutoSuggestFromHistory
     except ImportError:
         return None, None, None
@@ -226,8 +225,8 @@ class REPL:
     def _eval_and_print(self, source: str) -> None:
         """Evaluate source and print result."""
         try:
-            from sucheme.parser import parse
             from sucheme.evaluator import eval_expr
+            from sucheme.parser import parse
             exprs = parse(source)
             for expr in exprs:
                 result = eval_expr(expr, self.interp.env)

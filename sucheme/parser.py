@@ -8,10 +8,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from sucheme.lexer import Token, TokenType, tokenize, LexerError
+from sucheme.lexer import Token, TokenType, tokenize
 from sucheme.types import (
-    NIL, TRUE, FALSE, Symbol, Pair, Vector, Char, SchemeString,
-    list_to_scheme, cons, SchemeSyntaxError,
+    FALSE,
+    TRUE,
+    Char,
+    SchemeString,
+    SchemeSyntaxError,
+    Symbol,
+    Vector,
+    cons,
+    list_to_scheme,
 )
 
 
@@ -118,22 +125,27 @@ class Parser:
                 self.consume()
                 return list_to_scheme(items)
             if tok.type == TokenType.RPAREN and close == TokenType.RBRACKET:
-                self.consume()
-                return list_to_scheme(items)
+                raise ParseError(
+                    f"Mismatched delimiter: expected ']' but got ')' at {tok.line}:{tok.col}",
+                    tok.line, tok.col,
+                )
             if tok.type == TokenType.RBRACKET and close == TokenType.RPAREN:
-                self.consume()
-                return list_to_scheme(items)
+                raise ParseError(
+                    f"Mismatched delimiter: expected ')' but got ']' at {tok.line}:{tok.col}",
+                    tok.line, tok.col,
+                )
             # Dotted pair
             if tok.type == TokenType.DOT:
                 self.consume()
                 if not items:
                     raise ParseError("Dot at start of list", tok.line, tok.col)
                 cdr = self._parse_expr()
-                # consume closing paren
+                # consume closing delimiter
                 close_tok = self.peek()
-                if close_tok.type not in (TokenType.RPAREN, TokenType.RBRACKET):
+                expected_close = ")" if close == TokenType.RPAREN else "]"
+                if close_tok.type != close:
                     raise ParseError(
-                        f"Expected ) after dotted pair, got {close_tok!r}",
+                        f"Expected {expected_close!r} after dotted pair, got {close_tok!r}",
                         close_tok.line, close_tok.col,
                     )
                 self.consume()
@@ -165,8 +177,17 @@ def parse(source: str) -> list[Any]:
 
 
 def parse_one(source: str) -> Any:
-    """Parse a single Scheme expression."""
+    """Parse a single Scheme expression.
+
+    Raises ParseError if there are trailing tokens after the first expression.
+    """
     tokens = tokenize(source)
     parser = Parser(tokens)
     expr = parser._parse_expr()
+    tok = parser.peek()
+    if tok.type != TokenType.EOF:
+        raise ParseError(
+            f"Unexpected token after expression: {tok!r}",
+            tok.line, tok.col,
+        )
     return expr

@@ -153,6 +153,8 @@ def _tokenize_iter(source: str) -> Iterator[Token]:
                     depth -= 1
                 else:
                     advance()
+            if depth > 0:
+                raise LexerError("Unterminated block comment", start_line, start_col)
             continue
 
         # Datum comment #;
@@ -201,7 +203,10 @@ def _tokenize_iter(source: str) -> Iterator[Token]:
                         raise LexerError(f"Unknown char name: {char_part}", sl, sc)
             else:
                 # Try as number with prefix
-                val = _parse_number(buf)
+                try:
+                    val = _parse_number(buf)
+                except ValueError as e:
+                    raise LexerError(str(e), sl, sc) from e
                 if val is not None:
                     yield _number_token(val, sl, sc)
                 else:
@@ -302,7 +307,10 @@ def _tokenize_iter(source: str) -> Iterator[Token]:
             continue
 
         # Try to parse as number
-        val = _parse_number(buf)
+        try:
+            val = _parse_number(buf)
+        except ValueError as e:
+            raise LexerError(str(e), sl, sc) from e
         if val is not None:
             yield _number_token(val, sl, sc)
         else:
@@ -326,7 +334,6 @@ def _number_token(val: object, line: int, col: int) -> Token:
 
 def _parse_number(s: str) -> object | None:
     """Try to parse a string as a Scheme number. Returns None if not a number."""
-    import math
     from fractions import Fraction
 
     if not s:
@@ -379,7 +386,7 @@ def _parse_number(s: str) -> object | None:
         if m:
             num, den = int(m.group(1)), int(m.group(2))
             if den == 0:
-                raise LexerError("Division by zero in rational literal", 0, 0)
+                raise ValueError("Division by zero in rational literal")
             val = Fraction(num, den)
             if exact is False:
                 return float(val)

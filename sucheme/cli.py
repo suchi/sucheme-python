@@ -111,10 +111,11 @@ def main(argv: list[str] | None = None) -> int:
         os.environ["SUCHEME_DEBUG"] = "1"
 
     from sucheme.interpreter import Interpreter
-    from sucheme.types import VOID, SchemeError, scheme_repr, scheme_display
-    from sucheme.types import list_to_scheme, SchemeString
+    from sucheme.types import VOID, SchemeError, SchemeString, list_to_scheme, scheme_repr
 
-    interp = Interpreter()
+    # --no-stdlib and --r5rs both suppress the extension standard library
+    use_stdlib = not (ns.no_stdlib or ns.r5rs)
+    interp = Interpreter(load_stdlib=use_stdlib)
 
     # Make command-line args available
     scheme_args = list_to_scheme([SchemeString(a) for a in (ns.args or [])])
@@ -151,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         except SchemeError as e:
             print(f"sucheme: {e}", file=sys.stderr)
             return 1
-        if not ns.interactive:
+        if not ns.interactive or ns.batch:
             return 0
 
     # Execute file
@@ -169,8 +170,12 @@ def main(argv: list[str] | None = None) -> int:
                 import traceback
                 traceback.print_exc()
             return 1
-        if not ns.interactive:
+        if not ns.interactive or ns.batch:
             return 0
+
+    # --batch without a file or expression: just exit
+    if ns.batch:
+        return 0
 
     # Start REPL
     from sucheme.repl import REPL

@@ -31,6 +31,10 @@ jobs:
       - name: Build package
         run: python -m build
 
+      - name: Get version without v prefix
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -39,14 +43,14 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
           body: |
-            ## sucheme ${{ github.ref_name }}
+            ## sucheme ${{ steps.version.outputs.VERSION }}
 
             R5RS準拠Schemeインタプリタ sucheme のリリースです。
 
             ### インストール
 
             ```bash
-            pip install sucheme==${{ github.ref_name }}
+            pip install sucheme==${{ steps.version.outputs.VERSION }}
             ```
 
             ### 使い方

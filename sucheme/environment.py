@@ -41,7 +41,7 @@ class Environment:
 
     def extend(self, params: Any, args: list) -> "Environment":
         """Create a child frame with params bound to args."""
-        from sucheme.types import Symbol, Pair, NIL, scheme_to_list
+        from sucheme.types import NIL, Pair, Symbol
         child = Environment(parent=self)
 
         if isinstance(params, Symbol):

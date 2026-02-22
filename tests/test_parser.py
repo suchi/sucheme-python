@@ -124,3 +124,24 @@ class TestErrors:
     def test_unexpected_close(self):
         with pytest.raises(Exception):
             parse_one(")")
+
+    def test_parse_one_trailing_tokens_raises(self):
+        from sucheme.parser import ParseError
+        with pytest.raises(ParseError):
+            parse_one("1 2")
+
+    def test_mismatched_bracket_raises(self):
+        from sucheme.parser import ParseError
+        with pytest.raises(ParseError):
+            parse("(1 2]")
+
+    def test_mismatched_paren_raises(self):
+        from sucheme.parser import ParseError
+        with pytest.raises(ParseError):
+            parse("[1 2)")
+
+    def test_dotted_pair_bracket_error_message(self):
+        from sucheme.parser import ParseError
+        with pytest.raises(ParseError) as exc_info:
+            parse("[a . b)")
+        assert "]" in str(exc_info.value)

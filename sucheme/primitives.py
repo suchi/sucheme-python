@@ -7,24 +7,46 @@ Implements all standard Scheme procedures as per R5RS section 6.
 from __future__ import annotations
 
 import math
-import os
 import sys
 from fractions import Fraction
 from typing import Any
 
-from sucheme.types import (
-    NIL, VOID, TRUE, FALSE,
-    Symbol, Boolean, Pair, Vector, Char, SchemeString,
-    LambdaProcedure, PrimitiveProcedure, MacroProcedure, ContinuationProcedure,
-    Values, Port,
-    SchemeError, SchemeRuntimeError, SchemeTypeError, SchemeArityError,
-    SchemeNameError,
-    scheme_bool, scheme_repr, scheme_display,
-    list_to_scheme, scheme_to_list, cons, car, cdr,
-    is_exact, is_inexact, exact_to_inexact, inexact_to_exact, normalize_number,
-    is_integer_val,
-)
 from sucheme.environment import Environment
+from sucheme.types import (
+    FALSE,
+    NIL,
+    TRUE,
+    VOID,
+    Boolean,
+    Char,
+    ContinuationProcedure,
+    LambdaProcedure,
+    MacroProcedure,
+    Pair,
+    Port,
+    PrimitiveProcedure,
+    SchemeArityError,
+    SchemeError,
+    SchemeRuntimeError,
+    SchemeString,
+    SchemeTypeError,
+    Symbol,
+    Values,
+    Vector,
+    car,
+    cdr,
+    exact_to_inexact,
+    inexact_to_exact,
+    is_exact,
+    is_inexact,
+    is_integer_val,
+    list_to_scheme,
+    normalize_number,
+    scheme_bool,
+    scheme_display,
+    scheme_repr,
+    scheme_to_list,
+)
 
 
 def register_primitives(env: Environment) -> None:
@@ -52,7 +74,7 @@ def _build_primitives() -> dict[str, Any]:
         if a is b:
             return TRUE
         # Numbers: exact same object or same value for small ints
-        if type(a) == type(b) and isinstance(a, int) and a == b:
+        if type(a) is type(b) and isinstance(a, int) and a == b:
             return TRUE
         return FALSE
 
@@ -706,7 +728,7 @@ def _build_primitives() -> dict[str, Any]:
         _check_int(k, "list-tail")
         for _ in range(int(k)):
             if not isinstance(lst, Pair):
-                raise SchemeRuntimeError(f"list-tail: index out of range")
+                raise SchemeRuntimeError("list-tail: index out of range")
             lst = lst.cdr
         return lst
 
@@ -715,10 +737,10 @@ def _build_primitives() -> dict[str, Any]:
         _check_int(k, "list-ref")
         for _ in range(int(k)):
             if not isinstance(lst, Pair):
-                raise SchemeRuntimeError(f"list-ref: index out of range")
+                raise SchemeRuntimeError("list-ref: index out of range")
             lst = lst.cdr
         if not isinstance(lst, Pair):
-            raise SchemeRuntimeError(f"list-ref: index out of range")
+            raise SchemeRuntimeError("list-ref: index out of range")
         return lst.car
 
     @prim("list-set!")
@@ -726,10 +748,10 @@ def _build_primitives() -> dict[str, Any]:
         _check_int(k, "list-set!")
         for _ in range(int(k)):
             if not isinstance(lst, Pair):
-                raise SchemeRuntimeError(f"list-set!: index out of range")
+                raise SchemeRuntimeError("list-set!: index out of range")
             lst = lst.cdr
         if not isinstance(lst, Pair):
-            raise SchemeRuntimeError(f"list-set!: index out of range")
+            raise SchemeRuntimeError("list-set!: index out of range")
         lst.car = v
         return VOID
 
@@ -1062,9 +1084,9 @@ def _build_primitives() -> dict[str, Any]:
     @prim("string-fill!")
     def string_fill(x: Any, ch: Any) -> Any:
         if not isinstance(x, SchemeString):
-            raise SchemeTypeError(f"string-fill!: not a string")
+            raise SchemeTypeError("string-fill!: not a string")
         if not isinstance(ch, Char):
-            raise SchemeTypeError(f"string-fill!: not a char")
+            raise SchemeTypeError("string-fill!: not a char")
         x.value = ch.char * len(x.value)
         return VOID
 
@@ -1153,7 +1175,7 @@ def _build_primitives() -> dict[str, Any]:
     @prim("vector-fill!")
     def vector_fill(v: Any, val: Any) -> Any:
         if not isinstance(v, Vector):
-            raise SchemeTypeError(f"vector-fill!: not a vector")
+            raise SchemeTypeError("vector-fill!: not a vector")
         for i in range(len(v.data)):
             v.data[i] = val
         return VOID
@@ -1163,7 +1185,7 @@ def _build_primitives() -> dict[str, Any]:
         _check_min_args(args, 1, "vector-copy")
         v = args[0]
         if not isinstance(v, Vector):
-            raise SchemeTypeError(f"vector-copy: not a vector")
+            raise SchemeTypeError("vector-copy: not a vector")
         start = int(args[1]) if len(args) > 1 else 0
         end = int(args[2]) if len(args) > 2 else len(v.data)
         return Vector(list(v.data[start:end]))
@@ -1228,10 +1250,10 @@ def _build_primitives() -> dict[str, Any]:
             raise SchemeArityError("map: no lists")
         result = []
         iters = list(lsts)
-        while all(isinstance(l, Pair) for l in iters):
-            cars = [l.car for l in iters]
+        while all(isinstance(p, Pair) for p in iters):
+            cars = [p.car for p in iters]
             result.append(_apply_proc(proc, cars))
-            iters = [l.cdr for l in iters]
+            iters = [p.cdr for p in iters]
         return list_to_scheme(result)
 
     @prim("for-each")
@@ -1239,10 +1261,10 @@ def _build_primitives() -> dict[str, Any]:
         if not lsts:
             raise SchemeArityError("for-each: no lists")
         iters = list(lsts)
-        while all(isinstance(l, Pair) for l in iters):
-            cars = [l.car for l in iters]
+        while all(isinstance(p, Pair) for p in iters):
+            cars = [p.car for p in iters]
             _apply_proc(proc, cars)
-            iters = [l.cdr for l in iters]
+            iters = [p.cdr for p in iters]
         return VOID
 
     @prim("filter")
@@ -1566,7 +1588,7 @@ def _build_primitives() -> dict[str, Any]:
     @prim("get-output-string")
     def get_output_string(port: Any) -> SchemeString:
         if not isinstance(port, Port):
-            raise SchemeTypeError(f"get-output-string: not a port")
+            raise SchemeTypeError("get-output-string: not a port")
         return SchemeString(port.file.getvalue())
 
     @prim("with-exception-handler")
@@ -1617,11 +1639,11 @@ def _build_primitives() -> dict[str, Any]:
     @prim("load")
     def scheme_load(path: Any, env: Any = None) -> Any:
         s = _check_str(path, "load")
-        from sucheme.interpreter import Interpreter
-        # This will be called with an interpreter context; simplified here
-        with open(s, "r", encoding="utf-8") as f:
-            source = f.read()
-        return SchemeString(f"loaded {s}")
+        # This primitive is overridden by the Interpreter; here we just verify
+        # the file exists and signal that load requires an interpreter context.
+        with open(s, "r", encoding="utf-8"):
+            pass
+        raise SchemeRuntimeError("load: requires an interpreter context")
 
     @prim("eval")
     def scheme_eval_prim(expr: Any, *args: Any) -> Any:
@@ -1854,9 +1876,9 @@ def _build_primitives() -> dict[str, Any]:
             return NIL
         result = []
         iters = list(lsts)
-        while all(isinstance(l, Pair) for l in iters):
-            result.append(list_to_scheme([l.car for l in iters]))
-            iters = [l.cdr for l in iters]
+        while all(isinstance(p, Pair) for p in iters):
+            result.append(list_to_scheme([p.car for p in iters]))
+            iters = [p.cdr for p in iters]
         return list_to_scheme(result)
 
     @prim("flatten")
@@ -2160,7 +2182,7 @@ def _build_primitives() -> dict[str, Any]:
     @prim("char-foldcase")
     def char_foldcase(x: Any) -> Char:
         if not isinstance(x, Char):
-            raise SchemeTypeError(f"char-foldcase: not a char")
+            raise SchemeTypeError("char-foldcase: not a char")
         return Char(x.char.lower())
 
     @prim("string-foldcase")

@@ -15,19 +15,35 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from sucheme.types import (
-    NIL, VOID, TRUE, FALSE,
-    Symbol, Boolean, Pair, Vector, Char, SchemeString,
-    LambdaProcedure, PrimitiveProcedure, MacroProcedure, ContinuationProcedure,
-    Values,
-    TailCall, TailApply,
-    ContinuationException,
-    SchemeError, SchemeSyntaxError, SchemeRuntimeError, SchemeTypeError,
-    SchemeNameError, SchemeArityError,
-    scheme_bool, list_to_scheme, scheme_to_list, cons,
-    VOID as _VOID,
-)
 from sucheme.environment import Environment
+from sucheme.types import (
+    FALSE,
+    NIL,
+    TRUE,
+    VOID,
+    Boolean,
+    Char,
+    ContinuationException,
+    ContinuationProcedure,
+    LambdaProcedure,
+    MacroProcedure,
+    Pair,
+    PrimitiveProcedure,
+    SchemeArityError,
+    SchemeNameError,
+    SchemeRuntimeError,
+    SchemeString,
+    SchemeSyntaxError,
+    SchemeTypeError,
+    Symbol,
+    TailApply,
+    TailCall,
+    Values,
+    Vector,
+    cons,
+    list_to_scheme,
+    scheme_bool,
+)
 
 # Recursion limit guard
 sys.setrecursionlimit(10000)
@@ -223,10 +239,10 @@ def _get_arg(args: Any, idx: int) -> Any:
     cur = args
     for _ in range(idx):
         if not isinstance(cur, Pair):
-            raise SchemeSyntaxError(f"Too few arguments")
+            raise SchemeSyntaxError("Too few arguments")
         cur = cur.cdr
     if not isinstance(cur, Pair):
-        raise SchemeSyntaxError(f"Too few arguments")
+        raise SchemeSyntaxError("Too few arguments")
     return cur.car
 
 
@@ -995,7 +1011,6 @@ def make_callcc_primitive() -> PrimitiveProcedure:
 
     def call_cc(proc: Any) -> Any:
         cont_id = _next_cont_id()
-        result_holder: list = []
 
         def continuation(*args: Any) -> Any:
             if len(args) == 0:

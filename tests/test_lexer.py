@@ -152,3 +152,27 @@ class TestSpecialNumbers:
         import math
         vals = token_values("+nan.0")
         assert math.isnan(vals[0])
+
+
+class TestErrorCases:
+    def test_unterminated_block_comment_raises(self):
+        with pytest.raises(LexerError) as exc_info:
+            tokenize("#| unclosed block comment")
+        # Error should report the start position, not 0:0
+        assert exc_info.value.line > 0
+
+    def test_rational_division_by_zero_raises(self):
+        with pytest.raises(LexerError) as exc_info:
+            tokenize("1/0")
+        # Error should report a meaningful line:col (not 0:0)
+        assert exc_info.value.line > 0
+        assert exc_info.value.col > 0
+
+    def test_nested_block_comment_terminated(self):
+        # Nested #| |# should work
+        vals = token_values("#| outer #| inner |# still outer |# 99")
+        assert vals == [99]
+
+    def test_nested_block_comment_unterminated(self):
+        with pytest.raises(LexerError):
+            tokenize("#| outer #| inner |# not closed")

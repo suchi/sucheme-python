@@ -10,22 +10,23 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from sucheme.types import (
-    NIL, VOID, TRUE, FALSE,
-    Symbol, Pair, SchemeString,
-    LambdaProcedure, PrimitiveProcedure, ContinuationProcedure,
-    SchemeError, SchemeRuntimeError, SchemeTypeError,
-    scheme_repr, scheme_display, list_to_scheme,
-    Values,
-)
 from sucheme.environment import Environment
 from sucheme.evaluator import (
-    eval_expr, make_callcc_primitive, make_dynamic_wind_primitive,
     _apply,
+    eval_expr,
+    make_callcc_primitive,
+    make_dynamic_wind_primitive,
 )
-from sucheme.primitives import register_primitives
 from sucheme.parser import parse
-
+from sucheme.primitives import register_primitives
+from sucheme.types import (
+    NIL,
+    VOID,
+    Pair,
+    PrimitiveProcedure,
+    SchemeString,
+    SchemeTypeError,
+)
 
 # Standard library Scheme code (bootstrap macros / functions)
 _STDLIB_SCM = r"""
@@ -315,9 +316,10 @@ _STDLIB_SCM = r"""
 class Interpreter:
     """R5RS Scheme interpreter."""
 
-    def __init__(self) -> None:
+    def __init__(self, load_stdlib: bool = True) -> None:
         self.env = self._make_global_env()
-        self._load_stdlib()
+        if load_stdlib:
+            self._load_stdlib()
 
     def _make_global_env(self) -> Environment:
         env = Environment()
@@ -364,9 +366,25 @@ class Interpreter:
         def interaction_environment() -> Any:
             return env
 
+        def make_report_environment(n: Any) -> Any:
+            """Return a new environment with R5RS standard bindings (copy)."""
+            new_env = Environment(parent=None)
+            # Copy all bindings as a snapshot; modifications won't affect the original
+            frame: Environment | None = env
+            while frame is not None:
+                for k, v in frame.bindings.items():
+                    if k not in new_env.bindings:
+                        new_env.bindings[k] = v
+                frame = frame.parent
+            return new_env
+
+        def make_null_environment(n: Any) -> Any:
+            """Return an empty environment (no standard bindings)."""
+            return Environment(parent=None)
+
         env.define("interaction-environment", PrimitiveProcedure(interaction_environment, "interaction-environment"))
-        env.define("scheme-report-environment", PrimitiveProcedure(lambda n: env, "scheme-report-environment"))
-        env.define("null-environment", PrimitiveProcedure(lambda n: env, "null-environment"))
+        env.define("scheme-report-environment", PrimitiveProcedure(make_report_environment, "scheme-report-environment"))
+        env.define("null-environment", PrimitiveProcedure(make_null_environment, "null-environment"))
 
         # Re-define eval properly
         def eval_in_env(expr: Any, env_arg: Any = None) -> Any:
@@ -382,7 +400,6 @@ class Interpreter:
                 raise SchemeTypeError("apply: no arguments")
             actual_args = list(args[:-1])
             last = args[-1]
-            from sucheme.types import Pair, NIL
             cur = last
             while isinstance(cur, Pair):
                 actual_args.append(cur.car)
